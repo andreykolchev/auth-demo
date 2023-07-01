@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:
+  db:
+    container_name: postgres-auth-demo
+    image: postgres:12-alpine
+    restart: on-failure
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    environment:
+      POSTGRES_DB: auth-demo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+  auth-demo:
+    image: local/auth-demo:latest
+    container_name: auth-demo
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/auth-demo
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
