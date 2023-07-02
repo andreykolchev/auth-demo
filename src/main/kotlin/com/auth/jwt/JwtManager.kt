@@ -40,6 +40,16 @@ class JwtManager(
     }
 
     /**
+     * Extracts the token from an Authorization header string.
+     *
+     * @param authHeader the Authorization header string
+     * @return the extracted token string
+     */
+    fun extractToken(authHeader: String): String {
+        return authHeader.substring(7)
+    }
+
+    /**
      * Validates a JWT token for the provided token and user details.
      *
      * @param token the JWT token to validate

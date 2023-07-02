@@ -2,6 +2,7 @@ package com.auth.config
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.security.SecurityScheme
 import io.swagger.v3.oas.annotations.servers.Server
 import org.springframework.context.annotation.Configuration
@@ -14,5 +15,8 @@ import org.springframework.context.annotation.Configuration
     bearerFormat = "JWT",
     scheme = "bearer"
 )
-@OpenAPIDefinition(servers = [Server(url = "http://localhost:8080/", description = "Demo server")])
+@OpenAPIDefinition(
+    servers = [Server(url = "http://localhost:8080/", description = "Demo server")],
+    security = [SecurityRequirement(name = "Bearer Authentication")]
+)
 class SwaggerOpenApiConfig

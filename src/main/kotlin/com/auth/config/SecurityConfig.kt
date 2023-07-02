@@ -29,7 +29,7 @@ class SecurityConfig {
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain? {
-        http.csrf { it.disable() }
+        http.csrf { it.disable() }.cors { it.disable() }
             .authorizeHttpRequests { request ->
                 request.requestMatchers(
                     "/api/v1/auth/register",

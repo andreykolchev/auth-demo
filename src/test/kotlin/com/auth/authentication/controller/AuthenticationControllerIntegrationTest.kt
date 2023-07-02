@@ -1,15 +1,12 @@
 package com.auth.authentication.controller
 
 import com.auth.AbstractIntegrationTest
-import com.auth.authentication.service.AuthenticationService
 import com.auth.user.repository.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,28 +19,30 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
-
-    private val UNDER_TEST = "/api/v1/auth"
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    private var objectMapper: ObjectMapper = jacksonObjectMapper()
-
     @Autowired
     private lateinit var userRepository: UserRepository
 
-    @Autowired
-    private lateinit var authenticationService: AuthenticationService
+    private val UNDER_TEST = "/api/v1/auth"
 
-    @AfterEach
+    private var objectMapper: ObjectMapper = jacksonObjectMapper()
+
+    var token: String = ""
+
+    @AfterAll
     fun cleanup() {
         userRepository.deleteAll()
     }
 
     @Test
+    @Order(1)
     fun shouldRegisterUser() {
         val request = RegistrationRequest("username", "password")
 
@@ -53,13 +52,13 @@ class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request))
             )
-            .andExpect(status().is2xxSuccessful())
+            .andExpect(status().is2xxSuccessful)
             .andReturn()
     }
 
     @Test
+    @Order(2)
     fun shouldLoginUser() {
-        authenticationService.register(RegistrationRequest(username = "username", password = "password"))
         val request = LoginRequest("username", "password")
 
         val res = mockMvc
@@ -68,25 +67,24 @@ class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request))
             )
-            .andExpect(status().is2xxSuccessful())
+            .andExpect(status().is2xxSuccessful)
             .andReturn()
 
-        val response: LoginResponse = objectMapper.readValue<LoginResponse>(res.response.contentAsString)
+        token = objectMapper.readValue<LoginResponse>(res.response.contentAsString).token
 
-        assertNotNull(response.token)
+        assertNotNull(token)
+
     }
 
     @Test
+    @Order(3)
     fun shouldGetLastLogins() {
-        authenticationService.register(RegistrationRequest(username = "username", password = "password"))
-        val login = authenticationService.login(LoginRequest(username = "username", password = "password"))
-
         val res = mockMvc
             .perform(
                 get("$UNDER_TEST/last-logins")
-                    .header(AUTHORIZATION, "Bearer " + login.token)
+                    .header(AUTHORIZATION, "Bearer $token")
             )
-            .andExpect(status().is2xxSuccessful())
+            .andExpect(status().is2xxSuccessful)
             .andReturn()
 
         val response: List<Date> = objectMapper.readValue<List<Date>>(res.response.contentAsString)
@@ -95,16 +93,42 @@ class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    @Order(4)
     fun shouldLogoutUser() {
-        authenticationService.register(RegistrationRequest(username = "username", password = "password"))
-        val login = authenticationService.login(LoginRequest(username = "username", password = "password"))
-
         mockMvc
             .perform(
                 get("$UNDER_TEST/logout")
-                    .header(AUTHORIZATION, "Bearer " + login.token)
+                    .header(AUTHORIZATION, "Bearer $token")
             )
-            .andExpect(status().is2xxSuccessful())
+            .andExpect(status().is2xxSuccessful)
+            .andReturn()
+    }
+
+    @Test
+    @Order(5)
+    fun shouldGetError() {
+        val request = RegistrationRequest("username", "password")
+
+        val res = mockMvc
+            .perform(
+                post("$UNDER_TEST/register")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+            )
+            .andExpect(status().isBadRequest)
+            .andReturn()
+
+        assertEquals("Username already exists.", res.response.contentAsString)
+    }
+
+    @Test
+    @Order(6)
+    fun shouldGetForbidden() {
+        mockMvc
+            .perform(
+                get("$UNDER_TEST/last-logins")
+            )
+            .andExpect(status().isForbidden)
             .andReturn()
     }
 }
