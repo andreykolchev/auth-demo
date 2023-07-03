@@ -10,11 +10,20 @@ import org.springframework.stereotype.Component
 import java.nio.file.AccessDeniedException
 import java.util.*
 
-
+/**
+ * Aspect for checking allowed authorities on annotated methods.
+ */
 @Aspect
 @Component
 class AllowedAuthoritiesAspect {
 
+    /**
+     * Checks the allowed authorities before executing the annotated method.
+     *
+     * @param pjp the ProceedingJoinPoint object
+     * @return the result of the method execution
+     * @throws Throwable if an error occurs during method execution
+     */
     @Around("@annotation(com.auth.authorization.AllowedAuthorities)")
     @Throws(Throwable::class)
     fun checkPermissions(pjp: ProceedingJoinPoint): Any {
