@@ -1,5 +1,6 @@
-package com.auth.user.entity
+package com.auth.user.model
 
+import com.auth.authorization.Authority
 import jakarta.persistence.*
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
@@ -21,12 +22,16 @@ data class User(
     @NotAudited
     private val password: String = "",
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "authority")
+    private val authority: Authority = Authority.USER,
+
     @Column(name = "login_count")
     private var loginCount: Long = 0
 ) : UserDetails {
 
     override fun getAuthorities(): List<SimpleGrantedAuthority> {
-        return emptyList()
+        return listOf(SimpleGrantedAuthority(authority.name))
     }
 
     override fun getPassword(): String {

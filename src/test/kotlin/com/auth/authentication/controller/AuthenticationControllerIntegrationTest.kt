@@ -44,7 +44,7 @@ class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @Order(1)
     fun shouldRegisterUser() {
-        val request = RegistrationRequest("username", "password")
+        val request = RegistrationRequest("username", "password", "USER")
 
         mockMvc
             .perform(
@@ -107,7 +107,7 @@ class AuthenticationControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @Order(5)
     fun shouldGetError() {
-        val request = RegistrationRequest("username", "password")
+        val request = RegistrationRequest("username", "password", "USER")
 
         val res = mockMvc
             .perform(

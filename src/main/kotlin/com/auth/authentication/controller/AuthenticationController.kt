@@ -1,6 +1,8 @@
 package com.auth.authentication.controller
 
 import com.auth.authentication.service.AuthenticationService
+import com.auth.authorization.AllowedAuthorities
+import com.auth.authorization.Authority.*
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -45,11 +47,12 @@ class AuthenticationController(
         responses = [ApiResponse(responseCode = "200", content = [Content(mediaType = "application/json")])]
     )
     @GetMapping("/last-logins")
+    @AllowedAuthorities(USER)
     fun getLastLogins(): ResponseEntity<List<Date>> {
         return ResponseEntity(authenticationService.getLastLogins(), HttpStatus.OK)
     }
 }
 
-data class RegistrationRequest(val username: String, val password: String)
+data class RegistrationRequest(val username: String, val password: String, val authority: String)
 data class LoginRequest(val username: String, val password: String)
 data class LoginResponse(val token: String)

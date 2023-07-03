@@ -5,7 +5,8 @@ import com.auth.authentication.controller.LoginResponse
 import com.auth.authentication.controller.RegistrationRequest
 import com.auth.exception.ErrorException
 import com.auth.jwt.JwtManager
-import com.auth.user.entity.User
+import com.auth.authorization.Authority
+import com.auth.user.model.User
 import com.auth.user.repository.UserRepository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -37,12 +38,12 @@ class AuthenticationService(
         if (userRepository.findByUsername(request.username) != null) {
             throw ErrorException("Username already exists.")
         }
-        userRepository.save(
-            User(
-                username = request.username,
-                password = passwordEncoder.encode(request.password)
-            )
+        val user = User(
+            username = request.username,
+            password = passwordEncoder.encode(request.password),
+            authority = Authority.valueOf(request.authority)
         )
+        userRepository.save(user)
     }
 
     /**
